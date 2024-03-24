@@ -27,8 +27,8 @@
 // <www.state-machine.com/licensing>
 // <info@state-machine.com>
 //============================================================================
-//! @date Last updated on: 2023-09-07
-//! @version Last updated for: @ref qpc_7_3_0
+//! @date Last updated on: 2024-02-16
+//! @version Last updated for: @ref qpc_7_3_3
 //!
 //! @file
 //! @brief QP/C port to POSIX-QV (single-threaded) with GNU compiler
@@ -46,7 +46,7 @@
 // no-return function specifier (C11 Standard)
 #define Q_NORETURN   _Noreturn void
 
-// QF event queue and thread types for POSIX-QV
+// QActive event queue and thread types for POSIX-QV
 #define QACTIVE_EQUEUE_TYPE     QEQueue
 //QACTIVE_OS_OBJ_TYPE  not used in this port
 //QACTIVE_THREAD_TYPE  not used in this port
@@ -69,11 +69,13 @@ void QF_setTickRate(uint32_t ticksPerSec, int tickPrio);
 // clock tick callback (NOTE not called when "ticker thread" is not running)
 void QF_onClockTick(void);
 
-// abstractions for console access...
-void QF_consoleSetup(void);
-void QF_consoleCleanup(void);
-int QF_consoleGetKey(void);
-int QF_consoleWaitForKey(void);
+#ifdef QF_CONSOLE
+    // abstractions for console access...
+    void QF_consoleSetup(void);
+    void QF_consoleCleanup(void);
+    int QF_consoleGetKey(void);
+    int QF_consoleWaitForKey(void);
+#endif
 
 // include files -------------------------------------------------------------
 #include "qequeue.h"   // POSIX-QV needs the native event-queue
@@ -109,10 +111,10 @@ int QF_consoleWaitForKey(void);
     #define QF_EPOOL_INIT_(p_, poolSto_, poolSize_, evtSize_) \
         (QMPool_init(&(p_), (poolSto_), (poolSize_), (evtSize_)))
     #define QF_EPOOL_EVENT_SIZE_(p_)  ((uint_fast16_t)(p_).blockSize)
-    #define QF_EPOOL_GET_(p_, e_, m_, qs_id_) \
-        ((e_) = (QEvt *)QMPool_get(&(p_), (m_), (qs_id_)))
-    #define QF_EPOOL_PUT_(p_, e_, qs_id_) \
-        (QMPool_put(&(p_), (e_), (qs_id_)))
+    #define QF_EPOOL_GET_(p_, e_, m_, qsId_) \
+        ((e_) = (QEvt *)QMPool_get(&(p_), (m_), (qsId_)))
+    #define QF_EPOOL_PUT_(p_, e_, qsId_) \
+        (QMPool_put(&(p_), (e_), (qsId_)))
 
     #include <pthread.h> // POSIX-thread API
 
@@ -129,12 +131,12 @@ int QF_consoleWaitForKey(void);
 // the time. Such sections of code are called "critical sections".
 //
 // This port uses a pair of functions QF_enterCriticalSection_() /
-// QF_leaveCriticalSection_() to enter/leave the cirtical section,
+// QF_leaveCriticalSection_() to enter/leave the critical section,
 // respectively.
 //
 // These functions are implemented in the qf_port.c module, where they
 // manipulate the file-scope POSIX mutex object l_critSectMutex_
-// to protect all critical sections. Using the single mutex for all crtical
+// to protect all critical sections. Using the single mutex for all critical
 // section guarantees that only one thread at a time can execute inside a
 // critical section. This prevents race conditions and data corruption.
 //

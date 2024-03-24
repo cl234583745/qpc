@@ -27,8 +27,8 @@
 // <www.state-machine.com/licensing>
 // <info@state-machine.com>
 //============================================================================
-//! @date Last updated on: 2023-09-07
-//! @version Last updated for: @ref qpc_7_3_0
+//! @date Last updated on: 2024-02-15
+//! @version Last updated for: @ref qpc_7_3_3
 //!
 //! @file
 //! @brief QP/C port to Win32-QV (single-threaded) with GNU or Visual C/C++
@@ -97,17 +97,17 @@ void QF_setTickRate(uint32_t ticksPerSec, int tickPrio);
 // clock tick callback (NOTE not called when "ticker thread" is not running)
 void QF_onClockTick(void);
 
-// abstractions for console access...
-void QF_consoleSetup(void);
-void QF_consoleCleanup(void);
-int QF_consoleGetKey(void);
-int QF_consoleWaitForKey(void);
-
 // special adaptations for QWIN GUI applications
 #ifdef QWIN_GUI
     // replace main() with main_gui() as the entry point to a GUI app.
     #define main() main_gui()
     int main_gui(void); // prototype of the GUI application entry point
+#elif defined QF_CONSOLE
+    // abstractions for console access...
+    void QF_consoleSetup(void);
+    void QF_consoleCleanup(void);
+    int QF_consoleGetKey(void);
+    int QF_consoleWaitForKey(void);
 #endif
 
 // include files -------------------------------------------------------------
@@ -149,10 +149,10 @@ int QF_consoleWaitForKey(void);
     #define QF_EPOOL_INIT_(p_, poolSto_, poolSize_, evtSize_) \
         (QMPool_init(&(p_), (poolSto_), (poolSize_), (evtSize_)))
     #define QF_EPOOL_EVENT_SIZE_(p_)  ((uint_fast16_t)(p_).blockSize)
-    #define QF_EPOOL_GET_(p_, e_, m_, qs_id_) \
-        ((e_) = (QEvt *)QMPool_get(&(p_), (m_), (qs_id_)))
-    #define QF_EPOOL_PUT_(p_, e_, qs_id_) \
-        (QMPool_put(&(p_), (e_), (qs_id_)))
+    #define QF_EPOOL_GET_(p_, e_, m_, qsId_) \
+        ((e_) = (QEvt *)QMPool_get(&(p_), (m_), (qsId_)))
+    #define QF_EPOOL_PUT_(p_, e_, qsId_) \
+        (QMPool_put(&(p_), (e_), (qsId_)))
 
     // Minimum required Windows version is Windows-XP or newer (0x0501)
     #ifdef WINVER
